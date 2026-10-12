@@ -324,11 +324,17 @@ def run_multi_photon():
             <canvas id="canvas-m4" width="600" height="450" style="position: absolute; left: 0; top: 0;"></canvas>
         </div>
         
-        <div id="stats-panel-m4" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.5; display: none;">
-            <span style="color: #faf015; font-weight: bold; font-size: 14px;">Swarm Statistics:</span><br>
-            • Total Photons Simulated: <span id="stat-total-m4" style="color: #38bdf8;">0</span><br>
-            • Escaped Photons: <span id="stat-escaped-m4" style="color: #22c55e; font-weight: bold;">0</span> / <span id="stat-target-m4">0</span><br>
-            • Swarm Average Collisions: <span id="stat-avg-coll-m4" style="color: #38bdf8;">0</span>
+        <!-- Upgraded Statistical Output Dashboard Layout Panel -->
+        <div id="stats-panel-m4" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.6; display: none;">
+            <span style="color: #faf015; font-weight: bold; font-size: 14px;">Swarm Simulation Metrics:</span><br>
+            • Total Population Simulated: <span id="stat-total-m4" style="color: #38bdf8;">0</span><br>
+            • Escaped Photon Rays: <span id="stat-escaped-m4" style="color: #22c55e; font-weight: bold;">0</span> / <span id="stat-target-m4">0</span><br>
+            <div id="extended-metrics-m4" style="margin-top: 5px; border-top: 1px dashed #334155; padding-top: 5px; display: none;">
+                <span style="color: #faf015; font-weight: bold;">Collision Profile Results:</span><br>
+                • Minimum Collisions (Fastest Escape): <span id="stat-min-coll-m4" style="color: #38bdf8; font-weight: bold;">0</span><br>
+                • Maximum Collisions (Slowest Escape): <span id="stat-max-coll-m4" style="color: #38bdf8; font-weight: bold;">0</span><br>
+                • Average Swarm Collisions: <span id="stat-avg-coll-m4" style="color: #38bdf8; font-weight: bold;">0</span>
+            </div>
         </div>
     </div>
     
@@ -343,10 +349,14 @@ def run_multi_photon():
         const startBtn = document.getElementById('start-btn-m4'); 
         const statusDisp = document.getElementById('status-display-m4');
         const statsPanel = document.getElementById('stats-panel-m4');
+        const extendedMetrics = document.getElementById('extended-metrics-m4');
         
         const statTotal = document.getElementById('stat-total-m4'); 
         const statEscaped = document.getElementById('stat-escaped-m4');
         const statTarget = document.getElementById('stat-target-m4'); 
+        
+        const statMinColl = document.getElementById('stat-min-coll-m4');
+        const statMaxColl = document.getElementById('stat-max-coll-m4');
         const statAvgColl = document.getElementById('stat-avg-coll-m4');
         
         const cx = canvas.width / 2; 
@@ -363,8 +373,7 @@ def run_multi_photon():
         let animationFrameId; 
         let photons = []; 
         let totalRays = 0; 
-        let escapedCount = 0; 
-        let totalCollisionsEver = 0;
+        let escapedCount = 0;
         
         drawBackground();
         
@@ -388,11 +397,11 @@ def run_multi_photon():
             
             photons = []; 
             escapedCount = 0; 
-            totalCollisionsEver = 0;
             
             statusDisp.innerText = "Simulating Swarm..."; 
             statusDisp.style.color = "#fa4c4c"; 
-            statsPanel.style.display = "none";
+            statsPanel.style.display = "block";
+            extendedMetrics.style.display = "none"; // Hide previous data extreme profiles
             
             for (let i = 1; i <= totalRays; i++) { 
                 photons.push({ id: i, x: 0, y: 0, inside: true, collisions: 0, color: getPhotonColor(i) }); 
@@ -401,6 +410,26 @@ def run_multi_photon():
             function getStepR() { 
                 const denom = 100 + 17 + (mfp / 5.0) * (-4); 
                 return (mfp * Math.random() * 2) / denom * sunRadius; 
+            }
+            
+            function calculateAndShowEndStats() {
+                let minC = photons[0].collisions;
+                let maxC = photons[0].collisions;
+                let sumC = 0;
+                
+                for (let i = 0; i < photons.length; i++) {
+                    let cCount = photons[i].collisions;
+                    sumC += cCount;
+                    if (cCount < minC) minC = cCount;
+                    if (cCount > maxC) maxC = cCount;
+                }
+                
+                let averageC = (sumC / totalRays).toFixed(1);
+                
+                statMinColl.innerText = minC;
+                statMaxColl.innerText = maxC;
+                statAvgColl.innerText = averageC;
+                extendedMetrics.style.display = "block";
             }
             
             function swarmStep() {
@@ -420,7 +449,6 @@ def run_multi_photon():
                     let newY = oldY + stepR * Math.sin(theta);
                     
                     p.collisions++; 
-                    totalCollisionsEver++;
                     
                     if ((newX * newX + newY * newY) >= sunRadiusSq) {
                         p.inside = false; 
@@ -448,7 +476,38 @@ def run_multi_photon():
                         ctx.stroke();
                     } else {
                         ctx.strokeStyle = p.color; 
+                        ctx.lineWidth = 1.0;  Papas
+                        ctx.beginPath(); 
+                        ctx.moveTo(cx + oldX, cy + oldY); 
+                        ctx.lineTo(cx + newX, cy + newY); 
+                        ctx.stroke();
+                    if ((newX * newX + newY * newY) >= sunRadiusSq) {
+                        p.inside = false; 
+                        escapedCount++;
+                        
+                        const bVal = oldX * Math.cos(theta) + oldY * Math.sin(theta); 
+                        const disc = sunRadiusSq - (oldX * oldX + oldY * oldY) + (bVal * bVal);
+                        const root = disc >= 0 ? Math.sqrt(disc) : 0; 
+                        let boundR = root - bVal; 
+                        if (boundR < 0) boundR = -root - bVal;
+                        
+                        const boundX = oldX + boundR * Math.cos(theta); 
+                        const boundY = oldY + boundR * Math.sin(theta);
+                        
+                        ctx.strokeStyle = p.color; 
                         ctx.lineWidth = 1.0; 
+                        ctx.beginPath(); 
+                        ctx.moveTo(cx + oldX, cy + oldY); 
+                        ctx.lineTo(cx + boundX, cy + boundY); 
+                        ctx.stroke();
+                        
+                        ctx.beginPath(); 
+                        ctx.moveTo(cx + boundX, cy + boundY); 
+                        ctx.lineTo(cx + 1.3 * boundX, cy + 1.3 * boundY); 
+                        ctx.stroke();
+                    } else {
+                        ctx.strokeStyle = p.color; 
+                        ctx.lineWidth = 1.0;
                         ctx.beginPath(); 
                         ctx.moveTo(cx + oldX, cy + oldY); 
                         ctx.lineTo(cx + newX, cy + newY); 
@@ -462,14 +521,13 @@ def run_multi_photon():
                 statTotal.innerText = totalRays; 
                 statEscaped.innerText = escapedCount; 
                 statTarget.innerText = totalRays;
-                statAvgColl.innerText = (totalCollisionsEver / totalRays).toFixed(1); 
-                statsPanel.style.display = "block";
                 
                 if (activeThisFrame && escapedCount < totalRays) { 
                     animationFrameId = requestAnimationFrame(swarmStep); 
                 } else { 
                     statusDisp.innerText = "All Escaped!"; 
                     statusDisp.style.color = "#85ff55"; 
+                    calculateAndShowEndStats();
                 }
             }
             swarmStep();
@@ -478,7 +536,7 @@ def run_multi_photon():
     </script>
     """
     display(HTML(html_str))
-
+                        
 def run_batches_and_dying_sun():
     """Modes 5 & 6: Unified core batch tracker tracking spatial decay release arrays alongside live histogram graph."""
     html_str = """
