@@ -1,0 +1,3 @@
+#!/bin/bash
+# Enable widget extension rendering out of the box
+jupyter nbextension enable --py widgetsnbextension --sys-prefix
