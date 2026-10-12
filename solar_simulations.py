@@ -476,37 +476,6 @@ def run_multi_photon():
                         ctx.stroke();
                     } else {
                         ctx.strokeStyle = p.color; 
-                        ctx.lineWidth = 1.0;  Papas
-                        ctx.beginPath(); 
-                        ctx.moveTo(cx + oldX, cy + oldY); 
-                        ctx.lineTo(cx + newX, cy + newY); 
-                        ctx.stroke();
-                    if ((newX * newX + newY * newY) >= sunRadiusSq) {
-                        p.inside = false; 
-                        escapedCount++;
-                        
-                        const bVal = oldX * Math.cos(theta) + oldY * Math.sin(theta); 
-                        const disc = sunRadiusSq - (oldX * oldX + oldY * oldY) + (bVal * bVal);
-                        const root = disc >= 0 ? Math.sqrt(disc) : 0; 
-                        let boundR = root - bVal; 
-                        if (boundR < 0) boundR = -root - bVal;
-                        
-                        const boundX = oldX + boundR * Math.cos(theta); 
-                        const boundY = oldY + boundR * Math.sin(theta);
-                        
-                        ctx.strokeStyle = p.color; 
-                        ctx.lineWidth = 1.0; 
-                        ctx.beginPath(); 
-                        ctx.moveTo(cx + oldX, cy + oldY); 
-                        ctx.lineTo(cx + boundX, cy + boundY); 
-                        ctx.stroke();
-                        
-                        ctx.beginPath(); 
-                        ctx.moveTo(cx + boundX, cy + boundY); 
-                        ctx.lineTo(cx + 1.3 * boundX, cy + 1.3 * boundY); 
-                        ctx.stroke();
-                    } else {
-                        ctx.strokeStyle = p.color; 
                         ctx.lineWidth = 1.0;
                         ctx.beginPath(); 
                         ctx.moveTo(cx + oldX, cy + oldY); 
@@ -536,7 +505,7 @@ def run_multi_photon():
     </script>
     """
     display(HTML(html_str))
-                        
+    
 def run_batches_and_dying_sun():
     """Modes 5 & 6: Unified core batch tracker tracking spatial decay release arrays alongside live histogram graph."""
     html_str = """
