@@ -581,35 +581,35 @@ def run_batches():
     display(HTML(html_str + html_script))
 
 def run_dying_sun():
-    """Mode 6: Simulates core extinction and tracks the delayed surface luminosity decline
-    on an expanded, live-updating histogram canvas with calibrated axis intercepts."""
+    """Mode 6: Unified Full-Frame Solar Extinction Dashboard. Overlays analytical graphing axes 
+    directly on top of a fading full-frame spatial simulation with anchored static scale intercepts."""
     
     html_str = """
     <!-- Outer wrapper forcing Jupyter to render the complete block height without clipping scrollbars -->
     <div style="display: block; overflow: visible; height: auto; padding-bottom: 10px;">
         
-        <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; width: 640px; font-family: monospace; color: #f1f5f9; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+        <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; width: 680px; font-family: monospace; color: #f1f5f9; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
             
-            <!-- Controls Layout Panel Tray -->
+            <!-- Interactive Constraints Control Panel -->
             <div style="margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <label for="mfp-m6" style="color: #cbd5e1; min-width: 120px;">Mean Free Path:</label>
-                    <input type="range" id="mfp-m6" min="1" max="50" step="0.5" value="10" style="width: 100px;">
+                    <input type="range" id="mfp-m6" min="1" max="50" step="0.5" value="10" style="width: 120px;">
                     <span id="mfp-val-m6" style="color: #faf015; font-weight: bold;">10.0</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <label for="rays-m6" style="color: #cbd5e1; min-width: 120px;">Photons/Batch:</label>
-                    <input type="range" id="rays-m6" min="10" max="300" step="10" value="150" style="width: 100px;">
+                    <input type="range" id="rays-m6" min="10" max="300" step="10" value="150" style="width: 120px;">
                     <span id="rays-val-m6" style="color: #faf015; font-weight: bold;">150</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <label for="burn-m6" style="color: #cbd5e1; min-width: 120px;">Core Burn Batches:</label>
-                    <input type="range" id="burn-m6" min="5" max="30" step="1" value="15" style="width: 100px;">
+                    <input type="range" id="burn-m6" min="5" max="30" step="1" value="15" style="width: 120px;">
                     <span id="burn-val-m6" style="color: #faf015; font-weight: bold;">15</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <label for="speed-m6" style="color: #38bdf8; font-weight: bold; min-width: 120px;">Sim Speed:</label>
-                    <input type="range" id="speed-m6" min="1" max="100" step="1" value="50" style="width: 100px;">
+                    <input type="range" id="speed-m6" min="1" max="100" step="1" value="50" style="width: 120px;">
                     <span id="speed-val-m6" style="color: #faf015; font-weight: bold;">50%</span>
                 </div>
             </div>
@@ -619,23 +619,13 @@ def run_dying_sun():
             </div>
 
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span style="color: #f43f5e; font-weight: bold; font-size: 15px;">Mode 6: Solar Extinction Core Profile</span>
+                <span style="color: #f43f5e; font-weight: bold; font-size: 15px;">Mode 6: Full-Frame Overlaid Extinction Dashboard</span>
                 <span id="status-display-m6" style="color: #94a3b8; font-weight: bold;">Ready</span>
             </div>
             
-            <!-- Twin Canvas Visualization Block Layout -->
-            <div style="display: flex; flex-direction: column; gap: 15px; background-color: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #475569;">
-                <div>
-                    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Spatial Cluster Matrix</div>
-                    <div style="position: relative; width: 600px; height: 200px; background-color: #0f172a; border-radius: 4px; overflow: hidden;">
-                        <canvas id="canvas-spatial-m6" width="600" height="200" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
-                        <canvas id="canvas-boundary-m6" width="600" height="200" style="position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none;"></canvas>
-                    </div>
-                </div>
-                <div>
-                    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Luminosity Timeline (Escapes vs Time/Collisions)</div>
-                    <canvas id="canvas-graph-m6" width="600" height="300" style="background-color: #0f172a; border-radius: 4px;"></canvas>
-                </div>
+            <!-- Full Frame Consolidated Workstation Area -->
+            <div style="position: relative; width: 640px; height: 400px; background-color: #0f172a; border-radius: 8px; border: 1px solid #475569; overflow: hidden;">
+                <canvas id="canvas-dashboard-m6" width="640" height="400" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
             </div>
             
             <!-- Statistical Laboratory Readout Desk -->
@@ -652,16 +642,12 @@ def run_dying_sun():
     html_script = """
     <script>
     (function() {
-        const cSpatial = document.getElementById('canvas-spatial-m6'); const ctxS = cSpatial.getContext('2d');
-        const cBoundary = document.getElementById('canvas-boundary-m6'); const ctxB = cBoundary.getContext('2d');
-        const cGraph = document.getElementById('canvas-graph-m6'); const ctxG = cGraph.getContext('2d');
-        
+        const canvas = document.getElementById('canvas-dashboard-m6'); const ctx = canvas.getContext('2d');
         const startBtn = document.getElementById('start-btn-m6'); const statusDisp = document.getElementById('status-display-m6'); const statsPanel = document.getElementById('stats-panel-m6');
         const sTotal = document.getElementById('stat-total-m6'); const sBurn = document.getElementById('stat-burn-m6');
         const sTCore = document.getElementById('stat-t-core-m6'); const sTHalf = document.getElementById('stat-t-half-m6'); const sTDead = document.getElementById('stat-t-dead-m6');
         const speedSlider = document.getElementById('speed-m6'); const speedVal = document.getElementById('speed-val-m6');
 
-        // Connect sliders to text readouts
         const elements = ['mfp-m6', 'rays-m6', 'burn-m6'];
         elements.forEach(id => {
             const el = document.getElementById(id); const val = document.getElementById(id.replace('m6', 'val-m6'));
@@ -669,8 +655,12 @@ def run_dying_sun():
         });
         speedSlider.addEventListener('input', () => { speedVal.innerText = speedSlider.value + '%'; });
 
-        const sunRadius = 80; const sunRadiusSq = sunRadius * sunRadius;
-        const cx = cSpatial.width / 2; const cy = cSpatial.height / 2;
+        const cx = canvas.width / 2; const cy = canvas.height / 2;
+        const sunRadius = 180; const sunRadiusSq = sunRadius * sunRadius;
+
+        const graphLeft = 60; const graphRight = 580; const graphTop = 40; const graphBottom = 350;
+        const graphWidth = graphRight - graphLeft; const graphHeight = graphBottom - graphTop;
+
         const PALETTE = ['#00aa00', '#00aaaa', '#aa0000', '#aa00aa', '#aa5500', '#aaaaaa', '#555555', '#5555ff', '#55ff55', '#55ffff', '#ff5555', '#ff55ff', '#ffff55', '#0000aa'];
         function getBatchColor(idx) { return PALETTE[(idx - 1) % PALETTE.length]; }
 
@@ -680,25 +670,71 @@ def run_dying_sun():
         let activeGroupsCount = 0; let totalEscapedEver = 0;
         let coreIsDead = false; let maxSteadyStateLuminosity = 0;
         
-        // Critical physical timestamps
         let tCoreDeath = 0; let tHalfBrightness = 0; let tSunExtinction = 0;
 
-        drawStaticBoundary();
-        clearGraphGrid();
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawOverlaidGrid(150 * 0.38);
 
-        function drawStaticBoundary() {
-            ctxB.clearRect(0, 0, cBoundary.width, cBoundary.height); ctxB.strokeStyle = '#475569'; ctxB.lineWidth = 1.5;
-            ctxB.beginPath(); ctxB.arc(cx, cy, sunRadius, 0, 2 * Math.PI); ctxB.stroke();
-        }
+        function drawOverlaidGrid(fixedLuminosityPeak) {
+            ctx.strokeStyle = 'rgba(71, 85, 105, 0.4)'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(cx, cy, sunRadius, 0, 2 * Math.PI); ctx.stroke();
 
-        function clearGraphGrid() {
-            ctxG.clearRect(0, 0, cGraph.width, cGraph.height);
-            ctxG.strokeStyle = '#334155'; ctxG.lineWidth = 1.5;
-            ctxG.beginPath(); ctxG.moveTo(50, 20); ctxG.lineTo(50, 260); ctxG.lineTo(580, 260); ctxG.stroke();
-            
-            ctxG.fillStyle = '#94a3b8'; ctxG.font = '10px monospace';
-            ctxG.fillText("Photons Escaped / Interval", 60, 15);
-            ctxG.fillText("Total Collisions (Time)", 430, 275);
+            ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(graphLeft, graphTop); ctx.lineTo(graphLeft, graphBottom); ctx.lineTo(graphRight, graphBottom); ctx.stroke();
+
+            ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace';
+            ctx.fillText("Photons Escaped / Interval", graphLeft + 10, graphTop - 15);
+            ctx.fillText("Total Collisions (Time)", graphRight - 150, graphBottom + 25);
+
+            let yScale = (graphHeight - 40) / fixedLuminosityPeak;
+            let fullY = graphBottom - fixedLuminosityPeak * yScale;
+            let halfY = graphBottom - (fixedLuminosityPeak * 0.5) * yScale;
+
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(34, 197, 94, 0.5)';
+            ctx.beginPath(); ctx.moveTo(graphLeft, fullY); ctx.lineTo(graphRight, fullY); ctx.stroke();
+            ctx.fillStyle = '#22c55e'; ctx.fillText("Full Brightness (" + Math.round(fixedLuminosityPeak) + ")", graphLeft + 10, fullY - 4);
+
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
+            ctx.beginPath(); ctx.moveTo(graphLeft, halfY); ctx.lineTo(graphRight, halfY); ctx.stroke();
+            ctx.fillStyle = '#f59e0b'; ctx.fillText("Half Brightness (" + Math.round(fixedLuminosityPeak * 0.5) + ")", graphLeft + 10, halfY - 4);
+
+            let totalPossibleIntervals = Math.max(120, escapeHistoryLog.length);
+            let xScale = graphWidth / totalPossibleIntervals;
+
+            if (tCoreDeath > 0) {
+                let cxG = graphLeft + (tCoreDeath / fixedStepInterval) * xScale;
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)'; ctx.beginPath(); ctx.moveTo(cxG, graphTop); ctx.lineTo(cxG, graphBottom); ctx.stroke();
+                ctx.fillStyle = '#ef4444'; ctx.fillText("Core Dies", cxG - 25, graphTop + 15);
+            }
+            if (tHalfBrightness > 0) {
+                let hxG = graphLeft + (tHalfBrightness / fixedStepInterval) * xScale;
+                ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)'; ctx.beginPath(); ctx.moveTo(hxG, graphTop); ctx.lineTo(hxG, graphBottom); ctx.stroke();
+                ctx.fillStyle = '#f59e0b'; ctx.fillText("1/2 Bright", hxG - 25, graphTop + 30);
+            }
+            if (tSunExtinction > 0) {
+                let dxG = graphLeft + (tSunExtinction / fixedStepInterval) * xScale;
+                ctx.strokeStyle = 'rgba(148, 163, 184, 0.7)'; ctx.beginPath(); ctx.moveTo(dxG, graphTop); ctx.lineTo(dxG, graphBottom); ctx.stroke();
+                ctx.fillStyle = '#94a3b8'; ctx.fillText("Sun Dies", dxG - 25, graphTop + 45);
+            }
+
+            if (escapeHistoryLog.length > 0) {
+                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.5; ctx.beginPath();
+                for (let i = 0; i < escapeHistoryLog.length; i++) {
+                    let gx = graphLeft + i * xScale;
+                    let gy = graphBottom - escapeHistoryLog[i] * yScale;
+                    if (gy > graphBottom) gy = graphBottom;
+                    if (i === 0) ctx.moveTo(gx, gy); else ctx.lineTo(gx, gy);
+                }
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#64748b'; ctx.font = '9px monospace';
+            let stepSpacing = Math.ceil(totalPossibleIntervals / 5);
+            for (let i = 0; i <= totalPossibleIntervals; i += stepSpacing) {
+                let tx = graphLeft + i * xScale;
+                if (tx <= graphRight) ctx.fillText(i * fixedStepInterval, tx - 10, graphBottom + 12);
+            }
         }
 
         startBtn.addEventListener('click', function() {
@@ -708,110 +744,25 @@ def run_dying_sun():
             configMfp = parseFloat(document.getElementById('mfp-m6').value);
             
             globalPhotons = []; escapeHistoryLog = []; currentCollisionTick = 0;
-            activeGroupsCount = 0; totalEscapedEver = 0; maxSteadyStateLuminosity = 0;
-            coreIsDead = false; tCoreDeath = 0; tHalfBrightness = 0; tSunExtinction = 0;
+            activeGroupsCount = 0; totalEscapedEver = 0; coreIsDead = false;
+            tCoreDeath = 0; tHalfBrightness = 0; tSunExtinction = 0;
+
+            maxSteadyStateLuminosity = configRays * 0.38; 
+            if (maxSteadyStateLuminosity < 5) maxSteadyStateLuminosity = 5;
             
             statusDisp.innerText = "Core Burning..."; statusDisp.style.color = "#fbbf24";
             statsPanel.style.display = "block";
             sTCore.innerText = "--"; sTHalf.innerText = "--"; sTDead.innerText = "--";
             
-            ctxS.fillStyle = '#0f172a'; ctxS.fillRect(0, 0, cSpatial.width, cSpatial.height);
-            clearGraphGrid();
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             spawnNextBatchGroup(); engineLoop();
         });
 
         function spawnNextBatchGroup() {
             if (coreIsDead || activeGroupsCount >= configBurnBatches) return;
-            activeGroupsCount++;
-            let batchColor = getBatchColor(activeGroupsCount);
+            activeGroupsCount++; let batchColor = getBatchColor(activeGroupsCount);
             for (let i = 0; i < configRays; i++) {
                 globalPhotons.push({ x: 0, y: 0, inside: true, color: batchColor });
-            }
-        }
-
-        function drawAnalyticalGraph() {
-            clearGraphGrid();
-            if (escapeHistoryLog.length === 0) return;
-
-            // Establish steady state baseline peak
-            let burnIntervals = Math.min(escapeHistoryLog.length, configBurnBatches);
-            let steadySum = 0, count = 0;
-            for(let i = Math.floor(burnIntervals*0.4); i < burnIntervals; i++) {
-                steadySum += escapeHistoryLog[i]; count++;
-            }
-            if(count > 0 && !coreIsDead) {
-                maxSteadyStateLuminosity = Math.max(maxSteadyStateLuminosity, steadySum / count);
-            }
-            if (maxSteadyStateLuminosity === 0) maxSteadyStateLuminosity = configRays * 0.4;
-
-            // Vertical scale physics rules mapping
-            let yScale = 200 / maxSteadyStateLuminosity;
-            let graphWidth = 510;
-            let totalPossibleIntervals = Math.max(100, escapeHistoryLog.length);
-            let xScale = graphWidth / totalPossibleIntervals;
-
-            // 1. Draw Analytical Horizontal Intercepts Grid lines
-            let fullY = 260 - maxSteadyStateLuminosity * yScale;
-            let halfY = 260 - (maxSteadyStateLuminosity * 0.5) * yScale;
-
-            ctxG.lineWidth = 1;
-            ctxG.strokeStyle = 'rgba(34, 197, 94, 0.35)'; // Full Brightness Green
-            ctxG.setLineDash([4, 4]); ctxG.beginPath(); ctxG.moveTo(50, fullY); ctxG.lineTo(580, fullY); ctxG.stroke();
-            ctxG.fillStyle = '#22c55e'; ctxG.setLineDash([]);
-            ctxG.fillText("Full Brightness (" + Math.round(maxSteadyStateLuminosity) + ")", 55, fullY - 4);
-
-            ctxG.strokeStyle = 'rgba(245, 158, 11, 0.35)'; // Half Brightness Amber
-            ctxG.setLineDash([4, 4]); ctxG.beginPath(); ctxG.moveTo(50, halfY); ctxG.lineTo(580, halfY); ctxG.stroke();
-            ctxG.fillStyle = '#f59e0b'; ctxG.setLineDash([]);
-            ctxG.fillText("Half Brightness (" + Math.round(maxSteadyStateLuminosity * 0.5) + ")", 55, halfY - 4);
-
-            // 2. Locate and Draw Vertical Intercept Flags
-            if (tCoreDeath > 0) {
-                let cxG = 50 + (tCoreDeath / fixedStepInterval) * xScale;
-                ctxG.strokeStyle = 'rgba(239, 68, 68, 0.4)'; ctxG.lineWidth = 1;
-                ctxG.setLineDash([2, 2]); ctxG.beginPath(); ctxG.moveTo(cxG, 20); ctxG.lineTo(cxG, 260); ctxG.stroke();
-                ctxG.fillStyle = '#ef4444'; ctxG.setLineDash([]); ctxG.fillText("Core Dies", cxG - 25, 32);
-            }
-
-            if (coreIsDead && tHalfBrightness === 0) {
-                for (let i = Math.floor(tCoreDeath/fixedStepInterval); i < escapeHistoryLog.length; i++) {
-                    if (escapeHistoryLog[i] <= maxSteadyStateLuminosity * 0.5) {
-                        tHalfBrightness = i * fixedStepInterval;
-                        sTHalf.innerText = tHalfBrightness; break;
-                    }
-                }
-            }
-
-            if (tHalfBrightness > 0) {
-                let hxG = 50 + (tHalfBrightness / fixedStepInterval) * xScale;
-                ctxG.strokeStyle = 'rgba(245, 158, 11, 0.4)'; ctxG.setLineDash([2, 2]);
-                ctxG.beginPath(); ctxG.moveTo(hxG, 20); ctxG.lineTo(hxG, 260); ctxG.stroke();
-                ctxG.fillStyle = '#f59e0b'; ctxG.setLineDash([]); ctxG.fillText("1/2 Bright", hxG - 25, 45);
-            }
-
-            if (tSunExtinction > 0) {
-                let dxG = 50 + (tSunExtinction / fixedStepInterval) * xScale;
-                ctxG.strokeStyle = 'rgba(100, 116, 139, 0.5)'; ctxG.setLineDash([2, 2]);
-                ctxG.beginPath(); ctxG.moveTo(dxG, 20); ctxG.lineTo(dxG, 260); ctxG.stroke();
-                ctxG.fillStyle = '#94a3b8'; ctxG.setLineDash([]); ctxG.fillText("Sun Dies", dxG - 25, 58);
-            }
-
-            // 3. Render Continuous Scatter Path Distribution Line Curve
-            ctxG.strokeStyle = '#38bdf8'; ctxG.lineWidth = 2.0; ctxG.beginPath();
-            for (let i = 0; i < escapeHistoryLog.length; i++) {
-                let gx = 50 + i * xScale;
-                let gy = 260 - escapeHistoryLog[i] * yScale;
-                if (gy > 260) gy = 260; // Bound tracking within grid box floor
-                if (i === 0) ctxG.moveTo(gx, gy); else ctxG.lineTo(gx, gy);
-            }
-            ctxG.stroke();
-
-            // Axis ticks numeric markings
-            ctxG.fillStyle = '#64748b'; ctxG.font = '9px monospace';
-            let stepSpacing = Math.ceil(totalPossibleIntervals / 5);
-            for(let i=0; i<=totalPossibleIntervals; i+=stepSpacing) {
-                let tx = 50 + i * xScale;
-                if(tx <= 570) ctxG.fillText(i * fixedStepInterval, tx - 10, 269);
             }
         }
 
@@ -837,7 +788,8 @@ def run_dying_sun():
                     }
                 }
 
-                ctxS.fillStyle = "rgba(15, 23, 42, 0.05)"; ctxS.fillRect(0, 0, cSpatial.width, cSpatial.height);
+                ctx.fillStyle = "rgba(15, 23, 42, 0.1)"; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 for (let iter = 0; iter < fixedStepInterval; iter++) {
                     currentCollisionTick++;
@@ -853,11 +805,11 @@ def run_dying_sun():
 
                         if ((newX * newX + newY * newY) >= sunRadiusSq) {
                             p.inside = false; totalEscapedEver++; escapesThisIntervalSegment++;
-                            ctxS.strokeStyle = p.color; ctxS.lineWidth = 1.0; ctxS.beginPath(); ctxS.moveTo(cx + oldX, cy + oldY);
-                            ctxS.lineTo(cx + 1.15 * newX, cy + 1.15 * newY); ctxS.stroke();
+                            ctx.strokeStyle = p.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(cx + oldX, cy + oldY);
+                            ctx.lineTo(cx + 1.15 * newX, cy + 1.15 * newY); ctx.stroke();
                         } else {
-                            ctxS.strokeStyle = p.color; ctxS.lineWidth = 0.8; ctxS.beginPath(); ctxS.moveTo(cx + oldX, cy + oldY);
-                            ctxS.lineTo(cx + newX, cy + newY); ctxS.stroke();
+                            ctx.strokeStyle = p.color; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(cx + oldX, cy + oldY);
+                            ctx.lineTo(cx + newX, cy + newY); ctx.stroke();
                             p.x = newX; p.y = newY;
                         }
                     }
@@ -875,7 +827,16 @@ def run_dying_sun():
                 escapesThisIntervalSegment = 0;
             }
 
-            drawAnalyticalGraph();
+            if (coreIsDead && tHalfBrightness === 0) {
+                let targetIdx = Math.floor(tCoreDeath / fixedStepInterval);
+                for (let i = targetIdx; i < escapeHistoryLog.length; i++) {
+                    if (escapeHistoryLog[i] <= maxSteadyStateLuminosity * 0.5) {
+                        tHalfBrightness = i * fixedStepInterval; sTHalf.innerText = tHalfBrightness; break;
+                    }
+                }
+            }
+
+            drawOverlaidGrid(maxSteadyStateLuminosity);
 
             sTotal.innerText = configRays * configBurnBatches;
             sBurn.innerText = coreIsDead ? configBurnBatches : activeGroupsCount;
