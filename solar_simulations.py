@@ -7,9 +7,8 @@ def run_introduction():
     <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; width: 640px; font-family: monospace; color: #f1f5f9; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
         <div style="margin-bottom: 20px; padding: 12px; background-color: #1e293b; border-radius: 6px; border: 1px solid #475569; font-size: 13px;">
             <span style="color: #38bdf8; font-weight: bold;">Introduction Simulation Configuration:</span><br>
-            • Baseline Mean Free Path (L): <span style="color: #faf015; font-weight: bold;">1.00</span><br>
-            • Sample Ray Count: <span style="color: #faf015; font-weight: bold;">100</span><br>
-            • Visual Ray Tracing: <span style="color: #22c55e; font-weight: bold;">ON</span>
+            • Mean Free Path (L): <span style="color: #faf015; font-weight: bold;">1.00</span><br>
+            • Photons: <span style="color: #faf015; font-weight: bold;">100</span><br>
         </div>
         <div style="margin-bottom: 15px;">
             <button id="start-btn-m2" style="background-color: #38bdf8; color: #0f172a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Initialize Introduction Walk</button>
