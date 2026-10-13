@@ -191,7 +191,6 @@ def run_single_photon():
         const statsPanel = document.getElementById('stats-panel'); 
         const statSteps = document.getElementById('stat-steps');
         const statDist = document.getElementById('stat-dist');
-        
         const cx = canvas.width / 2; 
         const cy = canvas.height / 2; 
         const sunRadius = 200; 
@@ -400,241 +399,183 @@ def run_multi_photon():
     """
     display(HTML(html_str))
 
-def run_batches_and_dying_sun():
-    """Modes 5 & 6: Unified core batch tracker tracking spatial decay release arrays alongside live histogram graph."""
+def run_batches():
+    """Mode 5: Tracks consecutive grouped batch releases with uniform colors per batch layer, 
+    speed factor tuning, dynamic fading, and explicit output height overrides."""
+    
     html_str = """
-    <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; width: 640px; font-family: monospace; color: #f1f5f9; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-        <div style="margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <label for="mfp-m5" style="color: #cbd5e1; min-width: 120px;">Mean Free Path:</label>
-                <input type="range" id="mfp-m5" min="1" max="50" step="0.5" value="10" style="width: 100px;">
-                <span id="mfp-val-m5" style="color: #faf015; font-weight: bold;">10.0</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <label for="rays-m5" style="color: #cbd5e1; min-width: 120px;">Photons/Batch:</label>
-                <input type="range" id="rays-m5" min="5" max="200" step="5" value="50" style="width: 100px;">
-                <span id="rays-val-m5" style="color: #faf015; font-weight: bold;">50</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <label for="groups-m5" style="color: #cbd5e1; min-width: 120px;">Total Batches:</label>
-                <input type="range" id="groups-m5" min="2" max="20" step="1" value="10" style="width: 100px;">
-                <span id="groups-val-m5" style="color: #faf015; font-weight: bold;">10</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <label for="interval-m5" style="color: #cbd5e1; min-width: 120px;">Step Interval:</label>
-                <input type="range" id="interval-m5" min="5" max="50" step="5" value="20" style="width: 100px;">
-                <span id="interval-val-m5" style="color: #faf015; font-weight: bold;">20</span>
-            </div>
-        </div>
+    <!-- Outer wrapper forcing Jupyter to render the complete block height without clipping scrollbars -->
+    <div style="display: block; overflow: visible; height: auto; padding-bottom: 10px;">
         
-        <div style="margin-bottom: 15px; display: flex; gap: 10px;">
-            <button id="start-btn-m5" style="background-color: #22c55e; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1;">Run Batches</button>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-            <span style="color: #38bdf8; font-weight: bold; font-size: 15px;">Solar Core Batch Release Profile</span>
-            <span id="status-display-m5" style="color: #fa4c4c; font-weight: bold;">Ready</span>
-        </div>
-        
-        <div style="display: flex; flex-direction: column; gap: 15px; background-color: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #475569;">
-            <div>
-                <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase;">Spatial Tracker</div>
-                <canvas id="canvas-spatial-m5" width="600" height="260" style="background-color: #0f172a; border-radius: 4px;"></canvas>
+        <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; width: 640px; font-family: monospace; color: #f1f5f9; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+            
+            <!-- Interactive Constraints Control Panel -->
+            <div style="margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="mfp-m5" style="color: #cbd5e1; min-width: 120px;">Mean Free Path:</label>
+                    <input type="range" id="mfp-m5" min="1" max="50" step="0.5" value="10" style="width: 100px;">
+                    <span id="mfp-val-m5" style="color: #faf015; font-weight: bold;">10.0</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="rays-m5" style="color: #cbd5e1; min-width: 120px;">Photons/Batch:</label>
+                    <input type="range" id="rays-m5" min="5" max="200" step="5" value="100" style="width: 100px;">
+                    <span id="rays-val-m5" style="color: #faf015; font-weight: bold;">100</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="groups-m5" style="color: #cbd5e1; min-width: 120px;">Total Batches:</label>
+                    <input type="range" id="groups-m5" min="2" max="25" step="1" value="20" style="width: 100px;">
+                    <span id="groups-val-m5" style="color: #faf015; font-weight: bold;">20</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="interval-m5" style="color: #cbd5e1; min-width: 120px;">Step Interval:</label>
+                    <input type="range" id="interval-m5" min="5" max="50" step="5" value="20" style="width: 100px;">
+                    <span id="interval-val-m5" style="color: #faf015; font-weight: bold;">20</span>
+                </div>
             </div>
-            <div>
-                <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase;">Escape Distribution Profile (Histogram)</div>
-                <canvas id="canvas-graph-m5" width="600" height="160" style="background-color: #0f172a; border-radius: 4px;"></canvas>
+            
+            <!-- Simulation Speed slider layout bar tray -->
+            <div style="margin-bottom: 15px; display: grid; grid-template-columns: 1fr; gap: 10px; font-size: 12px; background-color: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid #334155;">
+                <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <label for="speed-m5" style="color: #38bdf8; font-weight: bold; min-width: 140px;">Simulation Speed:</label>
+                    <input type="range" id="speed-m5" min="1" max="100" step="1" value="40" style="flex-grow: 1;">
+                    <span id="speed-val-m5" style="color: #faf015; font-weight: bold; min-width: 45px; text-align: right;">40%</span>
+                </div>
             </div>
-        </div>
-        
-        <div id="stats-panel-m5" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 12px; line-height: 1.6; display: none;">
-            <span style="color: #faf015; font-weight: bold; font-size: 13px;">Advanced Batch Metrics:</span><br>
-            • Total Simulated Photons: <span id="stat-total-m5" style="color: #38bdf8;">0</span> | Active Batches Deployed: <span id="stat-deployed-m5" style="color: #38bdf8;">0</span><br>
-            • Escaped Population Count: <span id="stat-escaped-m5" style="color: #22c55e; font-weight: bold;">0</span> / <span id="stat-target-m5">0</span><br>
-            • Grand Total Calculations Completed: <span id="stat-total-coll-m5" style="color: #e2e8f0;">0</span>
+            
+            <div style="margin-bottom: 15px;">
+                <button id="start-btn-m5" style="background-color: #22c55e; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Release Batch Sequence</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #38bdf8; font-weight: bold; font-size: 15px;">Solar Core Batch Release Profile</span>
+                <span id="status-display-m5" style="color: #fa4c4c; font-weight: bold;">Ready</span>
+            </div>
+            
+            <div style="position: relative; width: 600px; height: 450px; background-color: #0f172a; border-radius: 8px; border: 1px solid #475569; overflow: hidden;">
+                <canvas id="canvas-particles-m5" width="600" height="450" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+                <canvas id="canvas-boundary-m5" width="600" height="450" style="position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none;"></canvas>
+            </div>
+            
+            <div id="stats-panel-m5" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.6; display: none;">
+                <span style="color: #faf015; font-weight: bold; font-size: 14px;">Batch Group Metrics:</span><br>
+                • Target Population: <span id="stat-total-m5" style="color: #38bdf8;">0</span> | Batches Launched: <span id="stat-deployed-m5" style="color: #38bdf8;">0</span> / <span id="stat-max-groups-m5">0</span><br>
+                • Escaped Photon Count: <span id="stat-escaped-m5" style="color: #22c55e; font-weight: bold;">0</span><br>
+                • Calculations Processed: <span id="stat-total-coll-m5" style="color: #e2e8f0;">0</span>
+            </div>
         </div>
     </div>
-    
+    """
+    html_script = """
     <script>
     (function() {
-        const cSpatial = document.getElementById('canvas-spatial-m5'); 
-        const ctxS = cSpatial.getContext('2d');
-        const cGraph = document.getElementById('canvas-graph-m5'); 
-        const ctxG = cGraph.getContext('2d');
-        
-        const sliders = ['mfp-m5', 'rays-m5', 'groups-m5', 'interval-m5'];
-        sliders.forEach(id => {
-            const input = document.getElementById(id); 
-            const output = document.getElementById(id.replace('range', 'val').replace('m5', 'val-m5'));
-            if (input && output) { 
-                input.addEventListener('input', () => { 
-                    output.innerText = id.includes('mfp') ? parseFloat(input.value).toFixed(1) : input.value; 
-                }); 
-            }
+        const cParticles = document.getElementById('canvas-particles-m5'); const ctxP = cParticles.getContext('2d');
+        const cBoundary = document.getElementById('canvas-boundary-m5'); const ctxB = cBoundary.getContext('2d');
+        const startBtn = document.getElementById('start-btn-m5'); const statusDisp = document.getElementById('status-display-m5'); const statsPanel = document.getElementById('stats-panel-m5');
+        const sTotal = document.getElementById('stat-total-m5'); const sDeployed = document.getElementById('stat-deployed-m5'); 
+        const sMaxGroups = document.getElementById('stat-max-groups-m5'); const sEscaped = document.getElementById('stat-escaped-m5'); const sColl = document.getElementById('stat-total-coll-m5');
+        const speedSlider = document.getElementById('speed-m5'); const speedVal = document.getElementById('speed-val-m5');
+
+        const elements = ['mfp-m5', 'rays-m5', 'groups-m5', 'interval-m5'];
+        elements.forEach(id => {
+            const el = document.getElementById(id); const val = document.getElementById(id.replace('m5', 'val-m5'));
+            if (el && val) el.addEventListener('input', () => { val.innerText = id.includes('mfp') ? parseFloat(el.value).toFixed(1) : el.value; });
         });
-        
-        const startBtn = document.getElementById('start-btn-m5'); 
-        const statusDisp = document.getElementById('status-display-m5'); 
-        const statsPanel = document.getElementById('stats-panel-m5');
-        const sTotal = document.getElementById('stat-total-m5'); 
-        const sDeployed = document.getElementById('stat-deployed-m5'); 
-        const sEscaped = document.getElementById('stat-escaped-m5'); 
-        const sTarget = document.getElementById('stat-target-m5'); 
-        const sColl = document.getElementById('stat-total-coll-m5');
-        
-        const sunRadius = 110; 
-        const sunRadiusSq = sunRadius * sunRadius; 
-        const cx = cSpatial.width / 2; 
-        const cy = cSpatial.height / 2;
-        
-        const PALETTE = ['#0000aa', '#00aa00', '#00aaaa', '#aa0000', '#aa00aa', '#aa5500', '#aaaaaa', '#555555', '#5555ff', '#55ff55', '#55ffff', '#ff5555', '#ff55ff', '#ffff55'];
-        function getGroupColor(idx) { return PALETTE[idx % PALETTE.length]; }
-        
-        let animationId; let globalPhotons = []; let escapeHistoryLog = []; let currentCollisionTick = 0;
+
+        speedSlider.addEventListener('input', () => { speedVal.innerText = speedSlider.value + '%'; });
+
+        const sunRadius = 200; const sunRadiusSq = sunRadius * sunRadius; const cx = cParticles.width / 2; const cy = cParticles.height / 2;
+        const PALETTE = ['#00aa00', '#00aaaa', '#aa0000', '#aa00aa', '#aa5500', '#aaaaaa', '#555555', '#5555ff', '#55ff55', '#55ffff', '#ff5555', '#ff55ff', '#ffff55', '#0000aa'];
+        function getBatchColor(idx) { return PALETTE[(idx - 1) % PALETTE.length]; }
+
+        let animationId; let globalPhotons = []; let currentCollisionTick = 0;
         let configRays = 0; let configGroups = 0; let configInterval = 0; let configMfp = 0;
         let activeGroupsCount = 0; let totalEscapedEver = 0; let grandTotalCollisions = 0;
-        
-        resetDisplays();
-        
-        function resetDisplays() {
-            ctxS.clearRect(0, 0, cSpatial.width, cSpatial.height); 
-            ctxS.strokeStyle = '#475569'; 
-            ctxS.lineWidth = 1.5;
-            ctxS.beginPath(); 
-            ctxS.arc(cx, cy, sunRadius, 0, 2 * Math.PI); 
-            ctxS.stroke();
-            
-            ctxG.clearRect(0, 0, cGraph.width, cGraph.height); 
-            ctxG.strokeStyle = '#334155'; 
-            ctxG.lineWidth = 1;
-            ctxG.beginPath(); 
-            ctxG.moveTo(40, 10); ctxG.lineTo(40, 140); ctxG.lineTo(580, 140); 
-            ctxG.stroke();
+        let frameAccumulator = 0;
+
+        drawStaticBoundary();
+        ctxP.fillStyle = '#0f172a'; ctxP.fillRect(0, 0, cParticles.width, cParticles.height);
+
+        function drawStaticBoundary() {
+            ctxB.clearRect(0, 0, cBoundary.width, cBoundary.height); ctxB.strokeStyle = '#475569'; ctxB.lineWidth = 2;
+            ctxB.beginPath(); ctxB.arc(cx, cy, sunRadius, 0, 2 * Math.PI); ctxB.stroke();
         }
-        
+
         startBtn.addEventListener('click', function() {
             cancelAnimationFrame(animationId);
-            configRays = parseInt(document.getElementById('rays-m5').value); 
+            configRays = parseInt(document.getElementById('rays-m5').value);
             configGroups = parseInt(document.getElementById('groups-m5').value);
-            configInterval = parseInt(document.getElementById('interval-m5').value); 
+            configInterval = parseInt(document.getElementById('interval-m5').value);
             configMfp = parseFloat(document.getElementById('mfp-m5').value);
             
-            globalPhotons = []; 
-            escapeHistoryLog = new Array(100).fill(0); 
-            currentCollisionTick = 0; 
-            activeGroupsCount = 0; 
-            totalEscapedEver = 0; 
-            grandTotalCollisions = 0;
+            globalPhotons = []; currentCollisionTick = 0; activeGroupsCount = 0; totalEscapedEver = 0; grandTotalCollisions = 0; frameAccumulator = 0;
+            statusDisp.innerText = "Releasing Swarms..."; statusDisp.style.color = "#fa4c4c"; statsPanel.style.display = "block";
             
-            statusDisp.innerText = "Processing Cycles..."; 
-            statusDisp.style.color = "#fa4c4c"; 
-            statsPanel.style.display = "block";
-            
-            resetDisplays(); 
-            spawnNextBatchGroup(); 
-            engineLoop();
+            ctxP.fillStyle = '#0f172a'; ctxP.fillRect(0, 0, cParticles.width, cParticles.height);
+            spawnNextBatchGroup(); engineLoop();
         });
-        
+
         function spawnNextBatchGroup() {
-            if (activeGroupsCount >= configGroups) return; 
-            activeGroupsCount++; 
-            let color = getGroupColor(activeGroupsCount);
-            for (let i = 0; i < configRays; i++) { 
-                globalPhotons.push({ x: 0, y: 0, inside: true, color: color, groupOwner: activeGroupsCount }); 
-            }
+            if (activeGroupsCount >= configGroups) return;
+            activeGroupsCount++; let batchColor = getBatchColor(activeGroupsCount);
+            for (let i = 0; i < configRays; i++) { globalPhotons.push({ x: 0, y: 0, inside: true, color: batchColor }); }
         }
-        
-        function drawDistributionHistogram() {
-            ctxG.clearRect(0, 0, cGraph.width, cGraph.height); 
-            ctxG.strokeStyle = '#334155'; 
-            ctxG.lineWidth = 1; 
-            ctxG.beginPath(); 
-            ctxG.moveTo(40, 10); ctxG.lineTo(40, 140); ctxG.lineTo(580, 140); 
-            ctxG.stroke();
-            
-            ctxG.fillStyle = '#94a3b8'; 
-            ctxG.font = '9px monospace'; 
-            ctxG.fillText("Escapes", 2, 15); 
-            ctxG.fillText("Collision Timesteps", 480, 152);
-            
-            let maxEscapedVal = Math.max(...escapeHistoryLog, 10); 
-            let barWidth = 500 / escapeHistoryLog.length; 
-            ctxG.fillStyle = '#38bdf8';
-            
-            for (let i = 0; i < escapeHistoryLog.length; i++) {
-                let val = escapeHistoryLog[i]; 
-                if (val === 0) continue; 
-                let barHeight = (val / maxEscapedVal) * 115; 
-                let bx = 42 + i * barWidth; 
-                let by = 140 - barHeight; 
-                ctxG.fillRect(bx, by, barWidth - 1, barHeight);
-            }
-        }
-        
+
         function engineLoop() {
-            let calculationsCompletedThisFrame = 0; 
-            let escapesRecordedInThisStep = 0; 
-            const denom = 100 + 17 + (configMfp / 5.0) * (-4);
-            
-            for (let iter = 0; iter < configInterval; iter++) {
-                currentCollisionTick++; 
-                let stepEscapes = 0;
-                
+            let calculationsThisFrame = 0; const denom = 100 + 17 + (configMfp / 5.0) * (-4);
+            const speedPct = parseInt(speedSlider.value);
+            let stepsToProcess = 1; let frameSkip = 0;
+
+            if (speedPct >= 80) { stepsToProcess = Math.floor((speedPct - 79) * (configInterval / 10)) + 1; }
+            else if (speedPct >= 20) { stepsToProcess = Math.max(1, Math.floor(configInterval * (speedPct / 80))); }
+            else { stepsToProcess = 1; frameSkip = Math.floor((20 - speedPct) / 2); }
+
+            frameAccumulator++;
+            if (frameAccumulator <= frameSkip) { animationId = requestAnimationFrame(engineLoop); return; }
+            frameAccumulator = 0;
+
+            ctxP.fillStyle = "rgba(15, 23, 42, 0.04)"; ctxP.fillRect(0, 0, cParticles.width, cParticles.height);
+
+            for (let step = 0; step < stepsToProcess; step++) {
+                currentCollisionTick++;
                 for (let i = 0; i < globalPhotons.length; i++) {
-                    let p = globalPhotons[i]; 
-                    if (!p.inside) continue; 
-                    calculationsCompletedThisFrame++; 
-                    grandTotalCollisions++;
+                    let p = globalPhotons[i]; if (!p.inside) continue;
+                    calculationsThisFrame++; grandTotalCollisions++;
                     
-                    let theta = Math.random() * 2 * Math.PI; 
-                    let stepR = (configMfp * Math.random() * 2) / denom * sunRadius;
+                    let theta = Math.random() * 2 * Math.PI; let stepR = (configMfp * Math.random() * 2) / denom * sunRadius;
+                    let oldX = p.x, oldY = p.y, newX = oldX + stepR * Math.cos(theta), newY = oldY + stepR * Math.sin(theta);
                     
-                    let oldX = p.x; let oldY = p.y; 
-                    let newX = oldX + stepR * Math.cos(theta); 
-                    let newY = oldY + stepR * Math.sin(theta);
-                    
-                    if ((newX * newX + newY * newY) >= sunRadiusSq) { 
-                        p.inside = false; 
-                        totalEscapedEver++; 
-                        stepEscapes++; 
-                        ctxS.strokeStyle = p.color; 
-                        ctxS.lineWidth = 1; 
-                        ctxS.beginPath(); 
-                        ctxS.moveTo(cx + oldX, cy + oldY); 
-                        ctxS.lineTo(cx + 1.1 * newX, cy + 1.1 * newY); 
-                        ctxS.stroke(); 
-                    } else { 
-                        p.x = newX; 
-                        p.y = newY; 
+                    if ((newX * newX + newY * newY) >= sunRadiusSq) {
+                        p.inside = false; totalEscapedEver++;
+                        const bVal = oldX * Math.cos(theta) + oldY * Math.sin(theta); const disc = sunRadiusSq - (oldX * oldX + oldY * oldY) + (bVal * bVal);
+                        const root = disc >= 0 ? Math.sqrt(disc) : 0; let boundR = root - bVal; if (boundR < 0) boundR = -root - bVal;
+                        
+                        ctxP.strokeStyle = p.color; ctxP.lineWidth = 1.5; ctxP.beginPath(); ctxP.moveTo(cx + oldX, cy + oldY);
+                        ctxP.lineTo(cx + (oldX + boundR * Math.cos(theta)), cy + (oldY + boundR * Math.sin(theta))); ctxP.stroke();
+                        ctxP.beginPath(); ctxP.moveTo(cx + (oldX + boundR * Math.cos(theta)), cy + (oldY + boundR * Math.sin(theta)));
+                        ctxP.lineTo(cx + 1.2 * newX, cy + 1.2 * newY); ctxP.stroke();
+                    } else {
+                        ctxP.strokeStyle = p.color; ctxP.lineWidth = 1.0; ctxP.beginPath(); ctxP.moveTo(cx + oldX, cy + oldY);
+                        ctxP.lineTo(cx + newX, cy + newY); ctxP.stroke();
+                        p.x = newX; p.y = newY;
                     }
                 }
-                
-                let profileIndex = Math.floor(currentCollisionTick / configInterval); 
-                if (profileIndex < escapeHistoryLog.length) { 
-                    escapeHistoryLog[profileIndex] += stepEscapes; 
-                }
-                if (currentCollisionTick % configInterval === 0 && activeGroupsCount < configGroups) { 
-                    spawnNextBatchGroup(); 
-                }
+                if (currentCollisionTick % configInterval === 0 && activeGroupsCount < configGroups) { spawnNextBatchGroup(); }
             }
-            
-            drawDistributionHistogram();
-            
-            let totalTargetPopulation = configRays * configGroups; 
-            sTotal.innerText = totalTargetPopulation; 
-            sDeployed.innerText = activeGroupsCount; 
-            sEscaped.innerText = totalEscapedEver; 
-            sTarget.innerText = totalTargetPopulation; 
-            sColl.innerText = grandTotalCollisions;
-            
-            if (calculationsCompletedThisFrame > 0 || activeGroupsCount < configGroups) { 
-                animationId = requestAnimationFrame(engineLoop); 
-            } else { 
-                statusDisp.innerText = "All Batches Clear!"; 
-                statusDisp.style.color = "#85ff55"; 
+
+            sTotal.innerText = configRays * configGroups; sDeployed.innerText = activeGroupsCount;
+            sMaxGroups.innerText = configGroups; sEscaped.innerText = totalEscapedEver; sColl.innerText = grandTotalCollisions;
+
+            let particlesActive = false;
+            for (let i = 0; i < globalPhotons.length; i++) { if (globalPhotons[i].inside) { particlesActive = true; break; } }
+
+            if (particlesActive || activeGroupsCount < configGroups) {
+                animationId = requestAnimationFrame(engineLoop);
+            } else {
+                statusDisp.innerText = "Sequence Complete!"; statusDisp.style.color = "#85ff55";
             }
         }
     })();
     </script>
     """
-    display(HTML(html_str))
+    
+    display(HTML(html_str + html_script))
