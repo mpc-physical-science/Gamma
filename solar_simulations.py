@@ -6,24 +6,23 @@ def run_introduction():
     html_str = """
     <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; width: 640px; font-family: monospace; color: #f1f5f9; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
         <div style="margin-bottom: 20px; padding: 12px; background-color: #1e293b; border-radius: 6px; border: 1px solid #475569; font-size: 13px;">
-            <span style="color: #38bdf8; font-weight: bold;">Introduction Simulation Configuration:</span><br>
+            <span style="color: #38bdf8; font-weight: bold;">Simulation Configuration:</span><br>
             • Mean Free Path (L): <span style="color: #faf015; font-weight: bold;">1.00</span><br>
             • Photons: <span style="color: #faf015; font-weight: bold;">100</span><br>
         </div>
         <div style="margin-bottom: 15px;">
-            <button id="start-btn-m2" style="background-color: #38bdf8; color: #0f172a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Initialize Introduction Walk</button>
+            <button id="start-btn-m2" style="background-color: #38bdf8; color: #0f172a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Start Simulation</button>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <span style="color: #e2e8f0; font-weight: bold; font-size: 15px;">Model 2: Initial Boundary Demo</span>
             <span id="status-display-m2" style="color: #94a3b8; font-weight: bold;">Ready</span>
         </div>
         <div style="position: relative; width: 600px; height: 450px; background-color: #1e293b; border-radius: 8px; border: 1px solid #475569;">
-            <canvas id="canvas-m2" width="600" height="450" style="position: absolute; left: 0; top: 0;"></canvas>
+            <canvas id="canvas-m2" width="600" height="450" style="position: absolute; left: 0; top: 0 Papas;"></canvas>
         </div>
         <div id="stats-panel-m2" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.5; display: none;">
-            <span style="color: #faf015; font-weight: bold; font-size: 14px;">Demo Statistics:</span><br>
-            • Total Escaped Rays: <span id="stat-escaped-m2" style="color: #22c55e; font-weight: bold;">0</span> / 100<br>
-            • System Status: <span id="stat-status-text-m2" style="color: #38bdf8;">Processing...</span>
+            • System Status: <span id="stat-status-text-m2" style="color: #38bdf8;">Processing...</span><br>
+            • Number of Collisions: <span id="stat-collisions-m2" style="color: #22c55e; font-weight: bold;">0</span><br>
+            • Total Escaped Photons: <span id="stat-escaped-m2" style="color: #22c55e; font-weight: bold;">0</span> / 100<br>
         </div>
     </div>
     <script>
@@ -34,6 +33,7 @@ def run_introduction():
         const statusDisp = document.getElementById('status-display-m2');
         const statsPanel = document.getElementById('stats-panel-m2'); 
         const statEscaped = document.getElementById('stat-escaped-m2');
+        const statCollisions = document.getElementById('stat-collisions-m2'); // Added reference
         const statStatusText = document.getElementById('stat-status-text-m2');
         
         const cx = canvas.width / 2; 
@@ -49,6 +49,7 @@ def run_introduction():
         let animationFrameId; 
         let photons = []; 
         let escapedCount = 0;
+        let collisionCount = 0; // Added counter variable
         
         drawBackground();
         
@@ -66,12 +67,14 @@ def run_introduction():
             drawBackground(); 
             photons = []; 
             escapedCount = 0;
+            collisionCount = 0; // Reset counter on click
             
-            statusDisp.innerText = "Simulating Baseline..."; 
-            statusDisp.style.color = "#fa4c4c"; 
+            statusDisp.innerText = "Running..."; 
+            statusDisp.style.color = "#38bdf8"; 
             statsPanel.style.display = "block";
-            statStatusText.innerText = "Processing random walk arrays..."; 
+            statStatusText.innerText = "Processing random walk..."; 
             statStatusText.style.color = "#38bdf8";
+            statCollisions.innerText = "0"; // Reset UI element
             
             for (let i = 1; i <= totalRays; i++) { 
                 photons.push({ x: 0, y: 0, inside: true, color: getPhotonColor(i) }); 
@@ -84,6 +87,7 @@ def run_introduction():
             
             function introductionStep() {
                 let activeParticles = false;
+                collisionCount++; // Increment collisions for each active step
                 for (let i = 0; i < photons.length; i++) {
                     let p = photons[i]; 
                     if (!p.inside) continue; 
@@ -135,13 +139,14 @@ def run_introduction():
                 }
                 
                 statEscaped.innerText = escapedCount;
+                statCollisions.innerText = collisionCount; // Update UI element with latest totals
                 
                 if (activeParticles && escapedCount < totalRays) { 
                     animationFrameId = requestAnimationFrame(introductionStep); 
                 } else { 
                     statusDisp.innerText = "Demo Complete!"; 
                     statusDisp.style.color = "#85ff55"; 
-                    statStatusText.innerText = "All introductory rays cleared boundary grid successfully."; 
+                    statStatusText.innerText = "Simulation complete."; 
                     statStatusText.style.color = "#22c55e"; 
                 }
             }
