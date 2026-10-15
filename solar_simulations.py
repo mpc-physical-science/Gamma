@@ -2,7 +2,8 @@
 from IPython.display import HTML, display
 
 def run_introduction():
-    """Mode 2: Default introduction simulation with fixed parameters (L=1.0, 100 Photons)."""
+    """Mode 2: Default introduction simulation with fixed parameters (L=1.0, 100 Photons) 
+    with functional Play, Pause, and Resume state controls."""
     html_str = """
     <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; width: 640px; font-family: monospace; color: #f1f5f9; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
         <div style="margin-bottom: 20px; padding: 12px; background-color: #1e293b; border-radius: 6px; border: 1px solid #475569; font-size: 13px;">
@@ -10,17 +11,18 @@ def run_introduction():
             • Mean Free Path (L): <span style="color: #faf015; font-weight: bold;">1.00</span><br>
             • Photons: <span style="color: #faf015; font-weight: bold;">100</span><br>
         </div>
-        <div style="margin-bottom: 15px;">
-            <button id="start-btn-m2" style="background-color: #38bdf8; color: #0f172a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Start Simulation</button>
+        
+        <!-- Button container that dynamically switches layout styles -->
+        <div id="btn-container-m2" style="margin-bottom: 15px; display: block;">
+            <button id="start-btn-m2" style="background-color: #38bdf8; color: #0f172a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background-color 0.2s;">Start Simulation</button>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <span id="status-display-m2" style="color: #94a3b8; font-weight: bold;">Ready</span>
+        <div style="display: flex; justify-content: center; width: 100%;">
+            <div style="position: relative; width: 600px; height: 450px; background-color: #1e293b; border-radius: 8px; border: 1px solid #475569;">
+                <canvas id="canvas-m2" width="600" height="450" style="position: absolute; left: 0; top: 0 Papayawhip;"></canvas>
+            </div>
         </div>
-        <div style="position: relative; width: 600px; height: 450px; background-color: #1e293b; border-radius: 8px; border: 1px solid #475569;">
-            <canvas id="canvas-m2" width="600" height="450" style="position: absolute; left: 0; top: 0 Papas;"></canvas>
-        </div>
-        <div id="stats-panel-m2" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.5; display: none;">
-            • System Status: <span id="stat-status-text-m2" style="color: #38bdf8;">Processing...</span><br>
+        <div id="stats-panel-m2" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.5; display: block;">
+            • System Status: <span id="stat-status-text-m2" style="color: #38bdf8;">Ready</span><br>
             • Number of Collisions: <span id="stat-collisions-m2" style="color: #22c55e; font-weight: bold;">0</span><br>
             • Total Escaped Photons: <span id="stat-escaped-m2" style="color: #22c55e; font-weight: bold;">0</span> / 100<br>
         </div>
@@ -30,10 +32,10 @@ def run_introduction():
         const canvas = document.getElementById('canvas-m2'); 
         const ctx = canvas.getContext('2d');
         const startBtn = document.getElementById('start-btn-m2'); 
-        const statusDisp = document.getElementById('status-display-m2');
+        const btnContainer = document.getElementById('btn-container-m2');
         const statsPanel = document.getElementById('stats-panel-m2'); 
         const statEscaped = document.getElementById('stat-escaped-m2');
-        const statCollisions = document.getElementById('stat-collisions-m2'); // Added reference
+        const statCollisions = document.getElementById('stat-collisions-m2');
         const statStatusText = document.getElementById('stat-status-text-m2');
         
         const cx = canvas.width / 2; 
@@ -49,7 +51,9 @@ def run_introduction():
         let animationFrameId; 
         let photons = []; 
         let escapedCount = 0;
-        let collisionCount = 0; // Added counter variable
+        let collisionCount = 0;
+        let isRunning = false;
+        let simCompleted = false;
         
         drawBackground();
         
@@ -62,96 +66,174 @@ def run_introduction():
             ctx.stroke();
         }
         
-        startBtn.addEventListener('click', function() {
-            cancelAnimationFrame(animationFrameId); 
-            drawBackground(); 
-            photons = []; 
+        function getStepR() { 
+            const denom = 100 + 17 + (mfp / 5.0) * (-4); 
+            return (mfp * Math.random() * 2) / denom * sunRadius; 
+        }
+
+        function triggerReset() {
+            cancelAnimationFrame(animationFrameId);
+            drawBackground();
+            photons = [];
             escapedCount = 0;
-            collisionCount = 0; // Reset counter on click
-            
-            statusDisp.innerText = "Running..."; 
-            statusDisp.style.color = "#38bdf8"; 
-            statsPanel.style.display = "block";
-            statStatusText.innerText = "Processing random walk..."; 
+            collisionCount = 0;
+            simCompleted = false;
+            isRunning = false;
+            statStatusText.innerText = "Ready";
             statStatusText.style.color = "#38bdf8";
-            statCollisions.innerText = "0"; // Reset UI element
+            statCollisions.innerText = "0";
+            statEscaped.innerText = "0";
             
-            for (let i = 1; i <= totalRays; i++) { 
-                photons.push({ x: 0, y: 0, inside: true, color: getPhotonColor(i) }); 
+            // Revert back to the single layout start button
+            btnContainer.style.display = "block";
+            btnContainer.innerHTML = `<button id="start-btn-m2" style="background-color: #38bdf8; color: #0f172a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background-color 0.2s;">Start Simulation</button>`;
+            
+            // Re-bind the click event listener to the recreated single start button
+            document.getElementById('start-btn-m2').addEventListener('click', handleStateAction);
+        }
+
+        function setupSplitControls() {
+            // Transform container to side-by-side flex layout
+            btnContainer.style.display = "flex";
+            btnContainer.style.gap = "15px";
+            btnContainer.innerHTML = `
+                <button id="reset-btn-m2" style="background-color: #ef4444; color: #ffffff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1; transition: background-color 0.2s;">Reset</button>
+                <button id="toggle-btn-m2" style="background-color: #faf015; color: #000000; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1; transition: background-color 0.2s;">Pause Simulation</button>
+            `;
+            
+            document.getElementById('reset-btn-m2').addEventListener('click', triggerReset);
+            document.getElementById('toggle-btn-m2').addEventListener('click', handleStateAction);
+        }
+        
+        function introductionStep() {
+            let activeParticles = false;
+            collisionCount++;
+            
+            for (let i = 0; i < photons.length; i++) {
+                let p = photons[i]; 
+                if (!p.inside) continue; 
+                activeParticles = true;
+                
+                const theta = Math.random() * 2 * Math.PI; 
+                const stepR = getStepR();
+                
+                let oldX = p.x; 
+                let oldY = p.y; 
+                let newX = oldX + stepR * Math.cos(theta); 
+                let newY = oldY + stepR * Math.sin(theta);
+                
+                if ((newX * newX + newY * newY) >= sunRadiusSq) {
+                    p.inside = false; 
+                    escapedCount++;
+                    
+                    const bVal = oldX * Math.cos(theta) + oldY * Math.sin(theta); 
+                    const disc = sunRadiusSq - (oldX * oldX + oldY * oldY) + (bVal * bVal);
+                    const root = disc >= 0 ? Math.sqrt(disc) : 0; 
+                    let boundR = root - bVal; 
+                    if (boundR < 0) boundR = -root - bVal;
+                    
+                    const boundX = oldX + boundR * Math.cos(theta); 
+                    const boundY = oldY + boundR * Math.sin(theta);
+                    
+                    ctx.strokeStyle = p.color; 
+                    ctx.lineWidth = 1.0; 
+                    ctx.beginPath(); 
+                    ctx.moveTo(cx + oldX, cy + oldY); 
+                    ctx.lineTo(cx + boundX, cy + boundY); 
+                    ctx.stroke();
+                    
+                    ctx.beginPath(); 
+                    ctx.moveTo(cx + boundX, cy + boundY); 
+                    ctx.lineTo(cx + 1.2 * boundX, cy + 1.2 * boundY); 
+                    ctx.stroke();
+                } else {
+                    ctx.strokeStyle = p.color; 
+                    ctx.lineWidth = 1.0; 
+                    ctx.beginPath(); 
+                    ctx.moveTo(cx + oldX, cy + oldY); 
+                    ctx.lineTo(cx + newX, cy + newY); 
+                    ctx.stroke();
+                    
+                    p.x = newX; 
+                    p.y = newY;
+                }
             }
             
-            function getStepR() { 
-                const denom = 100 + 17 + (mfp / 5.0) * (-4); 
-                return (mfp * Math.random() * 2) / denom * sunRadius; 
-            }
+            statEscaped.innerText = escapedCount;
+            statCollisions.innerText = collisionCount;
             
-            function introductionStep() {
-                let activeParticles = false;
-                collisionCount++; // Increment collisions for each active step
-                for (let i = 0; i < photons.length; i++) {
-                    let p = photons[i]; 
-                    if (!p.inside) continue; 
-                    activeParticles = true;
-                    
-                    const theta = Math.random() * 2 * Math.PI; 
-                    const stepR = getStepR();
-                    
-                    let oldX = p.x; 
-                    let oldY = p.y; 
-                    let newX = oldX + stepR * Math.cos(theta); 
-                    let newY = oldY + stepR * Math.sin(theta);
-                    
-                    if ((newX * newX + newY * newY) >= sunRadiusSq) {
-                        p.inside = false; 
-                        escapedCount++;
-                        
-                        const bVal = oldX * Math.cos(theta) + oldY * Math.sin(theta); 
-                        const disc = sunRadiusSq - (oldX * oldX + oldY * oldY) + (bVal * bVal);
-                        const root = disc >= 0 ? Math.sqrt(disc) : 0; 
-                        let boundR = root - bVal; 
-                        if (boundR < 0) boundR = -root - bVal;
-                        
-                        const boundX = oldX + boundR * Math.cos(theta); 
-                        const boundY = oldY + boundR * Math.sin(theta);
-                        
-                        ctx.strokeStyle = p.color; 
-                        ctx.lineWidth = 1.0; 
-                        ctx.beginPath(); 
-                        ctx.moveTo(cx + oldX, cy + oldY); 
-                        ctx.lineTo(cx + boundX, cy + boundY); 
-                        ctx.stroke();
-                        
-                        ctx.beginPath(); 
-                        ctx.moveTo(cx + boundX, cy + boundY); 
-                        ctx.lineTo(cx + 1.2 * boundX, cy + 1.2 * boundY); 
-                        ctx.stroke();
-                    } else {
-                        ctx.strokeStyle = p.color; 
-                        ctx.lineWidth = 1.0; 
-                        ctx.beginPath(); 
-                        ctx.moveTo(cx + oldX, cy + oldY); 
-                        ctx.lineTo(cx + newX, cy + newY); 
-                        ctx.stroke();
-                        
-                        p.x = newX; 
-                        p.y = newY;
+            if (activeParticles && escapedCount < totalRays) { 
+                animationFrameId = requestAnimationFrame(introductionStep); 
+            } else { 
+                simCompleted = true;
+                isRunning = false;
+                statStatusText.innerText = "Simulation complete"; 
+                statStatusText.style.color = "#22c55e"; 
+                
+                // Show standard uniform design for the action button area when complete
+                btnContainer.style.display = "block";
+                btnContainer.innerHTML = `<button id="start-btn-m2" style="background-color: #38bdf8; color: #0f172a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background-color 0.2s;">Restart Simulation</button>`;
+                document.getElementById('start-btn-m2').addEventListener('click', handleStateAction);
+            }
+        }
+        
+        function handleStateAction() {
+            if (simCompleted) {
+                drawBackground();
+                photons = [];
+                escapedCount = 0;
+                collisionCount = 0;
+                simCompleted = false;
+                
+                statsPanel.style.display = "block";
+                statCollisions.innerText = "0";
+                statEscaped.innerText = "0";
+            }
+
+            if (isRunning) {
+                // PAUSE ACTION STATE
+                cancelAnimationFrame(animationFrameId);
+                isRunning = false;
+                statStatusText.innerText = "Simulation paused";
+                statStatusText.style.color = "#faf015";
+                
+                const toggleBtn = document.getElementById('toggle-btn-m2');
+                if (toggleBtn) {
+                    toggleBtn.innerText = "Resume Simulation";
+                    toggleBtn.style.backgroundColor = "#22c55e"; // Green color profile
+                    toggleBtn.style.color = "#ffffff";
+                }
+            } else {
+                // START / RESUME ACTION STATE
+                statsPanel.style.display = "block";
+                statStatusText.innerText = "Processing random walk..."; 
+                statStatusText.style.color = "#22c55e";
+                
+                // Check if we need to switch from a single button to the split button controls
+                if (photons.length === 0) {
+                    setupSplitControls();
+                } else {
+                    const toggleBtn = document.getElementById('toggle-btn-m2');
+                    if (toggleBtn) {
+                        toggleBtn.innerText = "Pause Simulation";
+                        toggleBtn.style.backgroundColor = "#faf015"; // Yellow color profile
+                        toggleBtn.style.color = "#000000";
                     }
                 }
                 
-                statEscaped.innerText = escapedCount;
-                statCollisions.innerText = collisionCount; // Update UI element with latest totals
-                
-                if (activeParticles && escapedCount < totalRays) { 
-                    animationFrameId = requestAnimationFrame(introductionStep); 
-                } else { 
-                    statusDisp.innerText = "Demo Complete!"; 
-                    statusDisp.style.color = "#85ff55"; 
-                    statStatusText.innerText = "Simulation complete."; 
-                    statStatusText.style.color = "#22c55e"; 
+                // Initialize active rays array if it doesn't exist
+                if (photons.length === 0) {
+                    for (let i = 1; i <= totalRays; i++) { 
+                        photons.push({ x: 0, y: 0, inside: true, color: getPhotonColor(i) }); 
+                    }
                 }
+                
+                isRunning = true;
+                animationFrameId = requestAnimationFrame(introductionStep);
             }
-            introductionStep();
-        });
+        }
+        
+        startBtn.addEventListener('click', handleStateAction);
     })();
     </script>
     """
@@ -191,7 +273,6 @@ def run_single_photon():
         const slider = document.getElementById('mfp-range'); 
         const sliderVal = document.getElementById('mfp-val');
         const startBtn = document.getElementById('start-btn'); 
-        const statusDisp = document.getElementById('status-display');
         const statsPanel = document.getElementById('stats-panel'); 
         const statSteps = document.getElementById('stat-steps');
         const statDist = document.getElementById('stat-dist');
@@ -228,7 +309,7 @@ def run_single_photon():
             
             statusDisp.innerText = "Simulating..."; 
             statusDisp.style.color = "#fa4c4c"; 
-            statsPanel.style.display = "none";
+            statsPanel.style.display = "block";
             
             function getStepR() { 
                 const denom = 100 + 17 + (mfp / 5.0) * (-4); 
