@@ -18,7 +18,7 @@ def run_introduction():
         </div>
         <div style="display: flex; justify-content: center; width: 100%;">
             <div style="position: relative; width: 600px; height: 450px; background-color: #1e293b; border-radius: 8px; border: 1px solid #475569;">
-                <canvas id="canvas-m2" width="600" height="450" style="position: absolute; left: 0; top: 0 Papayawhip;"></canvas>
+                <canvas id="canvas-m2" width="600" height="450" style="position: absolute; left: 0; top: 0;"></canvas>
             </div>
         </div>
         <div id="stats-panel-m2" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.5; display: block;">
@@ -250,19 +250,22 @@ def run_single_photon():
             <button id="start-btn" style="background-color: #22c55e; color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Run Simulation</button>
         </div>
         
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <span style="color: #38bdf8; font-weight: bold; font-size: 16px;">Gamma Ray Single Photon Tracking</span>
-            <span id="status-display" style="color: #fa4c4c; font-weight: bold;">Ready</span>
+        <div style="display: flex; justify-content: center; width: 100%;">
+            <div style="position: relative; width: 600px; height: 450px; background-color: #1e293b; border-radius: 8px; border: 1px solid #475569;">
+                <canvas id="canvas" width="600" height="450" style="position: absolute; left: 0; top: 0;"></canvas>
+            </div>
         </div>
-        
-        <div style="position: relative; width: 600px; height: 450px; background-color: #1e293b; border-radius: 8px; border: 1px solid #475569;">
-            <canvas id="canvas" width="600" height="450" style="position: absolute; left: 0; top: 0;"></canvas>
-        </div>
-        
-        <div id="stats-panel" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.5; display: none;">
-            <span style="color: #faf015; font-weight: bold; font-size: 14px;">Photon Statistics:</span><br>
-            • Total Steps/Collisions: <span id="stat-steps" style="color: #38bdf8;">0</span><br>
+
+        <div id="stats-panel" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; font-size: 13px; line-height: 1.5; display: block;">
+            <span style="color: #faf015; font-weight: bold; font-size: 14px;">This run:</span><br>
+            • Total Steps (Collisions): <span id="stat-steps" style="color: #38bdf8;">0</span><br>
             • Total Distance Traveled: <span id="stat-dist" style="color: #38bdf8;">0</span>% of Sun's Radius
+        </div>
+
+        <div id="history-panel" style="margin-top: 15px; padding: 12px; background-color: #0f172a; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; line-height: 1.5; display: block;">
+            <span style="color: #faf015; font-weight: bold; font-size: 14px;">History:</span><br>
+            • Average: <span id="hist-avg" style="color: #38bdf8;">0.00</span><br>
+            • Steps to Escape: <span id="hist-list" style="color: #e2e8f0; word-break: break-all;">[]</span>
         </div>
     </div>
     
@@ -276,14 +279,15 @@ def run_single_photon():
         const statsPanel = document.getElementById('stats-panel'); 
         const statSteps = document.getElementById('stat-steps');
         const statDist = document.getElementById('stat-dist');
+        const histAvg = document.getElementById('hist-avg');
+        const histList = document.getElementById('hist-list');
         const cx = canvas.width / 2; 
         const cy = canvas.height / 2; 
         const sunRadius = 200; 
         const sunRadiusSq = sunRadius * sunRadius;
         
         let animationFrameId;
-        
-        drawBackground();
+        const stepsToEscapeHistory = [];
         
         slider.addEventListener('input', function() { 
             sliderVal.innerText = parseFloat(slider.value).toFixed(1); 
@@ -307,8 +311,6 @@ def run_single_photon():
             let stepCount = 0; 
             const mfp = parseFloat(slider.value);
             
-            statusDisp.innerText = "Simulating..."; 
-            statusDisp.style.color = "#fa4c4c"; 
             statsPanel.style.display = "block";
             
             function getStepR() { 
@@ -327,6 +329,9 @@ def run_single_photon():
                 
                 totalDistance += stepR; 
                 stepCount++;
+                
+                statSteps.innerText = stepCount; 
+                statDist.innerText = ((totalDistance / sunRadius) * 100).toFixed(2);
                 
                 if ((newX * newX + newY * newY) >= sunRadiusSq) {
                     const bVal = oldX * Math.cos(theta) + oldY * Math.sin(theta); 
@@ -351,12 +356,12 @@ def run_single_photon():
                     ctx.lineTo(cx + 2 * boundX, cy + 2 * boundY); 
                     ctx.stroke();
                     
-                    statusDisp.innerText = "Escaped!"; 
-                    statusDisp.style.color = "#85ff55";
+                    stepsToEscapeHistory.push(stepCount);
+                    const totalSum = stepsToEscapeHistory.reduce((a, b) => a + b, 0);
+                    const average = (totalSum / stepsToEscapeHistory.length).toFixed(2);
                     
-                    statSteps.innerText = stepCount; 
-                    statDist.innerText = ((totalDistance / sunRadius) * 100).toFixed(2);
-                    statsPanel.style.display = "block"; 
+                    histAvg.innerText = average;
+                    histList.innerText = JSON.stringify(stepsToEscapeHistory);
                     return;
                 }
                 
@@ -618,7 +623,7 @@ def run_batches():
             if (frameAccumulator <= frameSkip) { animationId = requestAnimationFrame(engineLoop); return; }
             frameAccumulator = 0;
 
-            ctxP.fillStyle = "rgba(15, 23, 42, 0.04)"; ctxP.fillRect(0, 0, cParticles.width, cParticles.height);
+            ctxP.fillStyle = "rgba(15, 23, 42, 0.1)"; ctxP.fillRect(0, 0, cParticles.width, cParticles.height);
 
             for (let step = 0; step < stepsToProcess; step++) {
                 currentCollisionTick++;
